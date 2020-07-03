@@ -8,8 +8,6 @@ export default class UndoRedo {
     this.limit = limit || 10
   }
 
-
-
   undo () {
     let backward = this.index - 1
     

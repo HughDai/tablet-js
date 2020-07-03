@@ -1,52 +1,108 @@
-export function noop () {}
+const WARNING = 'tabletjs warning: '
+const ERROR = 'tabletjs error: '
 
-export function is (obj: any, type: string): boolean {
-  return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase() === type
-}
+const Util =  {
+  noop () {},
 
-/**
- * cherry-picked util from konvajs
- */
-export function isPlainObject (obj: any): boolean {
-  return !!obj && obj.constructor === Object
-}
+  is (obj: any, type: string): boolean {
+    return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase() === type
+  },
+  /**
+   * cherry-picked util from konvajs
+   */
+  isPlainObject (obj: any): boolean {
+    return !!obj && obj.constructor === Object
+  },
 
-export function isElement (ele: any): ele is Element {
-  return !!(ele && ele.nodeType === 1)
-}
+  isElement (ele: any): ele is Element {
+    return !!(ele && ele.nodeType === 1)
+  },
 
-export function capitalize (str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
+  capitalize (str: string) {
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  },
 
-export function createCanvasElement () {
-  let canvas = document.createElement('canvas')
-  // on some environments canvas.style is readonly
-  try {
-    (<any>canvas).style = canvas.style || {};
-  } catch (e) {}
-  return canvas
-}
+  isUnminified: /param/.test(function(param) {}.toString()),
 
-export function getRandomColor () {
-  let randColor = ((Math.random() * 0xFFFFFF) >> 0).toString(16)
-  while (randColor.length < 6) {
-    randColor = '0' + randColor
+  throwException (str: string) {
+    throw new Error(ERROR + str)
+  },
+
+  error (str: string) {
+    console.error(ERROR + str)
+  },
+
+  warn (str: string) {
+    console.warn(WARNING + str)
+  },
+
+  createCanvasElement () {
+    let canvas = document.createElement('canvas')
+    // on some environments canvas.style is readonly
+    try {
+      (<any>canvas).style = canvas.style || {};
+    } catch (e) {
+      console.warn(e)
+    }
+    return canvas
+  },
+
+  getRandomColor () {
+    let randColor = ((Math.random() * 0xFFFFFF) >> 0).toString(16)
+    while (randColor.length < 6) {
+      randColor = '0' + randColor
+    }
+    return '#' + randColor
+  },
+
+  isBrowser (): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      // browser case
+      ({}.toString.call(window) === '[object Window]' ||
+        // electron case
+        {}.toString.call(window) === '[object global]')
+    )
+  },
+
+  _prepareToStringify(obj) {
+    var desc
+
+    obj.visitedByCircularReferenceRemoval = true
+
+    for (var key in obj) {
+      if (
+        !(obj.hasOwnProperty(key) && obj[key] && typeof obj[key] == 'object')
+      ) {
+        continue
+      }
+      desc = Object.getOwnPropertyDescriptor(obj, key)
+      if (
+        obj[key].visitedByCircularReferenceRemoval ||
+        Util.isElement(obj[key])
+      ) {
+        if (desc.configurable) {
+          delete obj[key]
+        } else {
+          return null
+        }
+      } else if (Util._prepareToStringify(obj[key]) === null) {
+        if (desc.configurable) {
+          delete obj[key]
+        } else {
+          return null
+        }
+      }
+    }
+
+    delete obj.visitedByCircularReferenceRemoval
+
+    return obj
   }
-  return '#' + randColor
+  /* cherry-picked util from konvajs end */
 }
 
-export function isBrowser (): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    // browser case
-    ({}.toString.call(window) === '[object Window]' ||
-      // electron case
-      {}.toString.call(window) === '[object global]')
-  )
-}
-
-/* cherry-picked util from konvajs end */
+export default Util
 
 export function download (src: string | Blob, filename?: string) {
   const isBlob = src instanceof Blob
