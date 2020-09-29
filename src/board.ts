@@ -3,6 +3,7 @@ import { Factory } from './Factory'
 import { Canvas } from './canvas'
 import { GetSet } from './types'
 import Util from './util'
+import Collection from './collection'
 
 export class Board extends Node {
   canvas: Canvas
@@ -50,13 +51,19 @@ export class Board extends Node {
 
     this.canvas.setSize(width, height)
 
-    this.children.forEach(child => {
+    this.children.each(child => {
       child.setSize({ width, height })
     })
   }
 
-  addEvent () {
-
+  addEvent (ctx, eventName) {
+    ctx.content.addEventListener(
+      eventName,
+      function (evt) {
+        ctx['_' + eventName](evt)
+      },
+      false
+    )
   }
 
   _bindContentEvents () {
@@ -97,7 +104,7 @@ export class Board extends Node {
       child.remove()
     }
 
-    this.children = []
+    this.children = new Collection()
     return this
   }
 
@@ -106,7 +113,7 @@ export class Board extends Node {
   }
 
   _setChildrenIndices() {
-    this.children.forEach(function (child, n) {
+    this.children.each(function (child, n) {
       child.index = n
     })
   }
@@ -125,3 +132,5 @@ export interface BoardConfig extends NodeConfig {
   container: HTMLDivElement | string
   pixelRatio?: number
 }
+
+Collection.mapMethods(Board)
